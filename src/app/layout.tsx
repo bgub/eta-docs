@@ -1,6 +1,7 @@
 import "@/app/global.css";
-import { RootProvider } from "fumadocs-ui/provider";
+
 import { Analytics } from "@vercel/analytics/next";
+import { RootProvider } from "fumadocs-ui/provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 

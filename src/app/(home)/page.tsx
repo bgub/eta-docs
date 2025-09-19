@@ -1,8 +1,8 @@
-import Link from "next/link";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import Image from "next/image";
+import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { Tabs, Tab } from "fumadocs-ui/components/tabs";
 
 export default function HomePage() {
   return (

@@ -1,9 +1,9 @@
 "use client";
 
 import { Eta } from "eta/core";
-import { useEffect, useRef, useState } from "react";
 import { init } from "modern-monaco";
-import type * as Monaco from "monaco-editor";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 
 const eta = new Eta();
 
@@ -97,11 +97,14 @@ interface Config {
   display: "function" | "result";
 }
 
-function Playground(): JSX.Element {
+function Playground(): React.JSX.Element {
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const editorInstanceRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(
-    null,
-  );
+  const editorInstanceRef = useRef<{
+    getValue: () => string;
+    onDidChangeModelContent: (callback: () => void) => void;
+    dispose: () => void;
+    getModel: () => { dispose: () => void } | null;
+  } | null>(null);
   const initialConfig: Config = {
     autoEscape: true,
     tagOpen: "<%",
@@ -341,6 +344,6 @@ function Playground(): JSX.Element {
   );
 }
 
-export default function App(): JSX.Element {
+export default function App(): React.JSX.Element {
   return <Playground />;
 }
