@@ -12,21 +12,20 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
+    "ace-builds": "^1.43.3",
     "class-variance-authority": "^0.7.1",
     "eta": "^4.0.1",
     "fumadocs-core": "15.7.12",
     "fumadocs-mdx": "11.10.0",
     "fumadocs-ui": "15.7.12",
     "lucide-react": "^0.544.0",
-    "modern-monaco": "^0.2.1",
     "next": "15.5.3",
-    "next-themes": "^0.4.6",
     "react": "^19.1.1",
+    "react-ace": "^14.0.1",
     "react-dom": "^19.1.1",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
-    "shiki": "^3.12.2",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {

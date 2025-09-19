@@ -1,5 +1,4 @@
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -10,13 +9,9 @@ export default function HomePage() {
       {/* Hero Section */}
       <div className="mx-auto max-w-3xl text-center">
         <div className="mb-4 flex items-center justify-center gap-3">
-          <Image
-            src="/icon.svg"
-            alt="Eta Logo"
-            width={64}
-            height={64}
-            className="h-16 w-16"
-          />
+          <span className="text-6xl align-top font-bold leading-none -mt-6">
+            η
+          </span>
           <h1 className="text-4xl font-bold sm:text-5xl">Eta</h1>
         </div>
         <p className="text-fd-muted-foreground text-balance">

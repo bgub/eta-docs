@@ -1,9 +1,11 @@
 "use client";
 
 import { Eta } from "eta/core";
-import { init } from "modern-monaco";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import AceEditor from "react-ace";
+import "ace-builds/src-noconflict/mode-ejs";
+import "ace-builds/src-noconflict/theme-monokai";
 
 const eta = new Eta();
 
@@ -98,13 +100,6 @@ interface Config {
 }
 
 function Playground(): React.JSX.Element {
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-  const editorInstanceRef = useRef<{
-    getValue: () => string;
-    onDidChangeModelContent: (callback: () => void) => void;
-    dispose: () => void;
-    getModel: () => { dispose: () => void } | null;
-  } | null>(null);
   const initialConfig: Config = {
     autoEscape: true,
     tagOpen: "<%",
@@ -120,107 +115,17 @@ function Playground(): React.JSX.Element {
   const [err, setErr] = useState<string | false>(false);
   const [mounted, setMounted] = useState<boolean>(false);
 
+  // Recompute compiled function and rendered result when template or config changes
   useEffect(() => {
-    let disposed = false;
-    (async () => {
-      const monaco = await init({
-        theme: "vitesse-dark",
-        langs: ["javascript"],
-      });
-      if (disposed || !editorContainerRef.current) return;
-      const model = monaco.editor.createModel(initialTemplate, "javascript");
-      const editor = monaco.editor.create(editorContainerRef.current, {
-        model,
-        automaticLayout: true,
-        fontSize: 14,
-        minimap: { enabled: false },
-      });
-      const recompute = (): void => {
-        const value = editor.getValue();
-        setTemplate(value);
-        const currentConfig = configRef.current;
-        const customConfig = {
-          autoEscape: currentConfig.autoEscape,
-          tags: [currentConfig.tagOpen, currentConfig.tagClose] as [
-            string,
-            string,
-          ],
-        };
-        try {
-          const compiled = eta.withConfig(customConfig).compile(value);
-          const fnString = compiled.toString();
-          const result = eta
-            .withConfig(customConfig)
-            .renderString(value, renderData);
-          setFunctionString(fnString);
-          setTemplateResult(result);
-          setErr(false);
-        } catch (ex: unknown) {
-          setErr(
-            (() => {
-              if (!ex) return "Unknown error";
-              if (ex instanceof Error)
-                return ex.stack || ex.message || String(ex);
-              if (typeof ex === "object" && ex !== null) {
-                const errorObj = ex as Record<string, unknown>;
-                const maybeMsg =
-                  errorObj.message || errorObj.reason || errorObj.type;
-                try {
-                  const json = JSON.stringify(ex);
-                  return maybeMsg ? `${String(maybeMsg)} ${json}` : json;
-                } catch (_) {
-                  return maybeMsg
-                    ? String(maybeMsg)
-                    : Object.prototype.toString.call(ex);
-                }
-              }
-              return String(ex);
-            })(),
-          );
-        }
-      };
-      // Initial compute once the editor is ready
-      recompute();
-      editor.onDidChangeModelContent(recompute);
-      editorInstanceRef.current = editor;
-    })();
-    return () => {
-      disposed = true;
-      const editor = editorInstanceRef.current;
-      if (editor) {
-        const model = editor.getModel();
-        editor.dispose();
-        if (model) model.dispose();
-      }
-      editorInstanceRef.current = null;
+    const customConfig = {
+      autoEscape: config.autoEscape,
+      tags: [config.tagOpen, config.tagClose] as [string, string],
     };
-  }, []);
-
-  useEffect(() => {
-    configRef.current = config;
-  }, [config]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  function handleConfigUpdate(newData: Partial<Config>): void {
-    setConfig((prev) => ({ ...prev, ...newData }));
-    const current = { ...configRef.current, ...newData };
-    configRef.current = current;
     try {
-      const compiled = eta
-        .withConfig({
-          autoEscape: current.autoEscape,
-          tags: [current.tagOpen, current.tagClose] as [string, string],
-        })
-        .compile(template);
+      const compiled = eta.withConfig(customConfig).compile(template);
       const fnString = compiled.toString();
       const result = eta
-        .withConfig({
-          autoEscape: current.autoEscape,
-          tags: [current.tagOpen, current.tagClose] as [string, string],
-        })
+        .withConfig(customConfig)
         .renderString(template, renderData);
       setFunctionString(fnString);
       setTemplateResult(result);
@@ -247,6 +152,18 @@ function Playground(): React.JSX.Element {
         })(),
       );
     }
+  }, [template, config]);
+
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  function handleConfigUpdate(newData: Partial<Config>): void {
+    setConfig((prev) => ({ ...prev, ...newData }));
   }
 
   return (
@@ -324,7 +241,22 @@ function Playground(): React.JSX.Element {
 
       <div className="flex h-[calc(100vh-var(--fd-header-height,3.5rem))]">
         <div className="w-1/2 h-full border-r border-neutral-800">
-          <div ref={editorContainerRef} className="h-full w-full" />
+          <AceEditor
+            mode="ejs"
+            theme="monokai"
+            value={template}
+            onChange={(val: string) => setTemplate(val)}
+            width="100%"
+            height="100%"
+            fontSize={14}
+            setOptions={{
+              useWorker: false,
+              showGutter: true,
+              showLineNumbers: true,
+              tabSize: 2,
+            }}
+            editorProps={{ $blockScrolling: true }}
+          />
         </div>
         <div
           className={`w-1/2 h-full overflow-auto font-mono bg-[var(--color-fd-primary)] text-neutral-100 border-l border-neutral-800 p-4`}
