@@ -2,11 +2,12 @@
 
 import { Eta } from "eta/core";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-ejs";
 import "ace-builds/src-noconflict/theme-monokai";
 
+// Constants and initial data
 const eta = new Eta();
 
 eta.templatesSync.define(
@@ -14,7 +15,7 @@ eta.templatesSync.define(
   eta.compile("Partial content: the value of `num` is <%= it.num %>"),
 );
 
-const initialTemplate = `OK, so have fun! :D
+const INITIAL_TEMPLATE = `OK, so have fun! :D
 -------------------
 <%
     var fruits = ["Apple", "Pear", "Orange", "Lemon"]
@@ -65,19 +66,7 @@ Display arrays
 <%= it.arr.join() %>
 `;
 
-interface RenderData {
-  number: number;
-  five: () => number;
-  arr: string[];
-  obj: {
-    key1: string;
-    key2: string;
-    key3: string;
-  };
-  users: Array<{ name: string; job: string }>;
-}
-
-const renderData: RenderData = {
+const RENDER_DATA = {
   number: 78,
   five: () => 5,
   arr: ["one", "two", "three", "four"],
@@ -90,8 +79,16 @@ const renderData: RenderData = {
     { name: "Ben", job: "Maintainer" },
     { name: "Joe", job: "Maintainer" },
   ],
+} as const;
+
+const INITIAL_CONFIG = {
+  autoEscape: true,
+  tagOpen: "<%",
+  tagClose: "%>",
+  display: "result" as const,
 };
 
+// Types
 interface Config {
   autoEscape: boolean;
   tagOpen: string;
@@ -99,145 +96,175 @@ interface Config {
   display: "function" | "result";
 }
 
-function Playground(): React.JSX.Element {
-  const initialConfig: Config = {
-    autoEscape: true,
-    tagOpen: "<%",
-    tagClose: "%>",
-    display: "result",
-  };
-  const configRef = useRef<Config>(initialConfig);
+interface CompilationResult {
+  functionString: string;
+  templateResult: string;
+  error: string | null;
+}
 
-  const [template, setTemplate] = useState<string>(initialTemplate);
-  const [functionString, setFunctionString] = useState<string>("");
-  const [templateResult, setTemplateResult] = useState<string>("");
-  const [config, setConfig] = useState<Config>(initialConfig);
-  const [err, setErr] = useState<string | false>(false);
-  const [mounted, setMounted] = useState<boolean>(false);
+// Utility functions
+function formatError(error: unknown): string {
+  if (!error) return "Unknown error";
+  if (error instanceof Error)
+    return error.stack || error.message || String(error);
+  if (typeof error === "object" && error !== null) {
+    const errorObj = error as Record<string, unknown>;
+    const message = errorObj.message || errorObj.reason || errorObj.type;
+    try {
+      const json = JSON.stringify(error);
+      return message ? `${String(message)} ${json}` : json;
+    } catch {
+      return message ? String(message) : Object.prototype.toString.call(error);
+    }
+  }
+  return String(error);
+}
 
-  // Recompute compiled function and rendered result when template or config changes
+// Custom hook for template compilation
+function useTemplateCompilation(
+  template: string,
+  config: Config,
+): CompilationResult {
+  const [result, setResult] = useState<CompilationResult>({
+    functionString: "",
+    templateResult: "",
+    error: null,
+  });
+
   useEffect(() => {
-    const customConfig = {
+    const etaConfig = {
       autoEscape: config.autoEscape,
       tags: [config.tagOpen, config.tagClose] as [string, string],
     };
+
     try {
-      const compiled = eta.withConfig(customConfig).compile(template);
-      const fnString = compiled.toString();
-      const result = eta
-        .withConfig(customConfig)
-        .renderString(template, renderData);
-      setFunctionString(fnString);
-      setTemplateResult(result);
-      setErr(false);
-    } catch (ex: unknown) {
-      setErr(
-        (() => {
-          if (!ex) return "Unknown error";
-          if (ex instanceof Error) return ex.stack || ex.message || String(ex);
-          if (typeof ex === "object" && ex !== null) {
-            const errorObj = ex as Record<string, unknown>;
-            const maybeMsg =
-              errorObj.message || errorObj.reason || errorObj.type;
-            try {
-              const json = JSON.stringify(ex);
-              return maybeMsg ? `${String(maybeMsg)} ${json}` : json;
-            } catch (_) {
-              return maybeMsg
-                ? String(maybeMsg)
-                : Object.prototype.toString.call(ex);
-            }
-          }
-          return String(ex);
-        })(),
-      );
+      const compiled = eta.withConfig(etaConfig).compile(template);
+      const functionString = compiled.toString();
+      const templateResult = eta
+        .withConfig(etaConfig)
+        .renderString(template, RENDER_DATA);
+
+      setResult({
+        functionString,
+        templateResult,
+        error: null,
+      });
+    } catch (error) {
+      setResult({
+        functionString: "",
+        templateResult: "",
+        error: formatError(error),
+      });
     }
   }, [template, config]);
 
-  useEffect(() => {
-    configRef.current = config;
-  }, [config]);
+  return result;
+}
+
+// Settings Panel Component
+interface SettingsPanelProps {
+  config: Config;
+  onConfigUpdate: (newData: Partial<Config>) => void;
+}
+
+function SettingsPanel({
+  config,
+  onConfigUpdate,
+}: SettingsPanelProps): React.JSX.Element {
+  return (
+    <div className="absolute right-6 bottom-6 z-10 w-64">
+      <div className="rounded-lg border border-neutral-800 bg-neutral-950/90 backdrop-blur px-3 py-3 shadow-lg">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          Settings
+        </div>
+        <div className="space-y-3 text-sm">
+          <label className="flex items-center justify-between gap-2">
+            <span className="text-neutral-300">Auto escape</span>
+            <input
+              type="checkbox"
+              checked={config.autoEscape}
+              onChange={(e) => onConfigUpdate({ autoEscape: e.target.checked })}
+              className="h-4 w-4"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-400">Open tag</span>
+            <input
+              type="text"
+              value={config.tagOpen}
+              onChange={(e) => onConfigUpdate({ tagOpen: e.target.value })}
+              className="h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-1 focus:ring-neutral-600"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-400">Close tag</span>
+            <input
+              type="text"
+              value={config.tagClose}
+              onChange={(e) => onConfigUpdate({ tagClose: e.target.value })}
+              className="h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-1 focus:ring-neutral-600"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-400">Display</span>
+            <select
+              value={config.display}
+              onChange={(e) =>
+                onConfigUpdate({
+                  display: e.target.value as "function" | "result",
+                })
+              }
+              className="h-9 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1 text-neutral-100 outline-none focus:ring-1 focus:ring-neutral-600"
+            >
+              <option
+                value="function"
+                className="text-neutral-900"
+                style={{ color: "#111827", backgroundColor: "#ffffff" }}
+              >
+                function
+              </option>
+              <option
+                value="result"
+                className="text-neutral-900"
+                style={{ color: "#111827", backgroundColor: "#ffffff" }}
+              >
+                result
+              </option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Playground(): React.JSX.Element {
+  const [template, setTemplate] = useState<string>(INITIAL_TEMPLATE);
+  const [config, setConfig] = useState<Config>(INITIAL_CONFIG);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  const { functionString, templateResult, error } = useTemplateCompilation(
+    template,
+    config,
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  function handleConfigUpdate(newData: Partial<Config>): void {
+  const handleConfigUpdate = useCallback((newData: Partial<Config>): void => {
     setConfig((prev) => ({ ...prev, ...newData }));
-  }
+  }, []);
+
+  const displayContent = (): string => {
+    if (!mounted) return "";
+    if (error) return error;
+    return config.display === "function" ? functionString : templateResult;
+  };
 
   return (
     <div className="relative">
-      {/* Floating settings GUI */}
-      <div className="absolute right-6 bottom-6 z-10 w-64">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-950/90 backdrop-blur px-3 py-3 shadow-lg">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            Settings
-          </div>
-          <div className="space-y-3 text-sm">
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-neutral-300">Auto escape</span>
-              <input
-                type="checkbox"
-                checked={config.autoEscape}
-                onChange={(e) =>
-                  handleConfigUpdate({ autoEscape: e.target.checked })
-                }
-                className="h-4 w-4"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">Open tag</span>
-              <input
-                type="text"
-                value={config.tagOpen}
-                onChange={(e) =>
-                  handleConfigUpdate({ tagOpen: e.target.value })
-                }
-                className="h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-1 focus:ring-neutral-600"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">Close tag</span>
-              <input
-                type="text"
-                value={config.tagClose}
-                onChange={(e) =>
-                  handleConfigUpdate({ tagClose: e.target.value })
-                }
-                className="h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-1 focus:ring-neutral-600"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">Display</span>
-              <select
-                value={config.display}
-                onChange={(e) =>
-                  handleConfigUpdate({
-                    display: e.target.value as "function" | "result",
-                  })
-                }
-                className="h-9 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1 text-neutral-100 outline-none focus:ring-1 focus:ring-neutral-600"
-              >
-                <option
-                  value="function"
-                  className="text-neutral-900"
-                  style={{ color: "#111827", backgroundColor: "#ffffff" }}
-                >
-                  function
-                </option>
-                <option
-                  value="result"
-                  className="text-neutral-900"
-                  style={{ color: "#111827", backgroundColor: "#ffffff" }}
-                >
-                  result
-                </option>
-              </select>
-            </label>
-          </div>
-        </div>
-      </div>
+      <SettingsPanel config={config} onConfigUpdate={handleConfigUpdate} />
 
       <div className="flex h-[calc(100vh-var(--fd-header-height,3.5rem))]">
         <div className="w-1/2 h-full border-r border-neutral-800">
@@ -245,7 +272,7 @@ function Playground(): React.JSX.Element {
             mode="ejs"
             theme="monokai"
             value={template}
-            onChange={(val: string) => setTemplate(val)}
+            onChange={setTemplate}
             width="100%"
             height="100%"
             fontSize={14}
@@ -258,17 +285,9 @@ function Playground(): React.JSX.Element {
             editorProps={{ $blockScrolling: true }}
           />
         </div>
-        <div
-          className={`w-1/2 h-full overflow-auto font-mono bg-[var(--color-fd-primary)] text-neutral-100 border-l border-neutral-800 p-4`}
-        >
+        <div className="w-1/2 h-full overflow-auto font-mono bg-[var(--color-fd-primary)] text-neutral-100 border-l border-neutral-800 p-4">
           <pre className="block whitespace-pre bg-transparent text-sm m-0">
-            {mounted
-              ? err
-                ? err
-                : config.display === "function"
-                  ? functionString
-                  : templateResult
-              : ""}
+            {displayContent()}
           </pre>
         </div>
       </div>
