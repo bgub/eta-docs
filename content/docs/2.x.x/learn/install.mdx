@@ -1,0 +1,64 @@
+---
+id: install
+title: Installation
+sidebar_label: Installation
+description: How to install Eta for use in Node.js or the browser
+---
+
+Eta tries to follow best practices, and provides a UMD build to support most JS loading options, like ES modules, CommonJS, and AMD.
+
+## Install Eta
+
+
+
+<Tabs items={["Node.js", "Deno", "Browser"]}>
+  <Tab value="Node.js">
+
+```sh
+npm install eta --save
+```
+
+Or if you prefer Yarn:
+
+```sh
+yarn add eta
+```
+
+### Importing / Requiring
+
+Eta is packaged as a UMD module, so you can require with CommonJS, import using ES Modules, or use AMD.
+
+```js
+import * as Eta from "eta"
+// or
+var Eta = require("eta")
+```
+
+  </Tab>
+  <Tab value="Deno">
+    
+```js
+import * as eta from "https://deno.land/x/eta@v1.6.0/mod.ts"
+```
+
+_Note: replace `1.6.0` with the current version_
+
+  </Tab>
+  <Tab value="Browser">
+
+### Unpkg
+
+```html
+<script src="https://unpkg.com/eta"></script>
+```
+
+### JSDelivr
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/eta"></script>
+```
+
+This makes Eta available through the global `eta` variable, and importable using ES modules, CommonJS, and AMD.
+
+  </Tab>
+</Tabs>
