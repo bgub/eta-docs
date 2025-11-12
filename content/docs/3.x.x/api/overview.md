@@ -137,15 +137,6 @@ const eta = new Eta({
 // "Hi <%= name %>, our records show you are <%= age %> years old"
 ```
 
-or if you want behavior similar to `useWith` but with better performance (still has naming collisions), then you can do something like this:
-
-```js
-const eta = new Eta({
-  functionHeader: "Object.entries({...it}||{}).forEach(([k,v])=>globalThis[k]=v)"
-})
-// "Hi <%= name %>"
-```
-
 ### Customizing file handling
 
 You can customize how Eta reads files by extending the Eta class and overriding the `readFile` and `resolvePath` methods:
