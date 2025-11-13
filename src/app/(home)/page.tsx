@@ -36,6 +36,24 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {/* ts-base Callout */}
+      <div className="mx-auto max-w-3xl px-4">
+        <div className="rounded-lg border bg-fd-muted/50 p-4 text-center">
+          <p className="text-sm text-fd-muted-foreground">
+            Built with{" "}
+            <a
+              href="https://github.com/bgub/ts-base"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-fd-primary hover:underline"
+            >
+              ts-base
+            </a>
+            , a modern TypeScript library template
+          </p>
+        </div>
+      </div>
+
       {/* EJS Comparison and Code Examples Side by Side */}
       <div className="mx-auto max-w-6xl px-4">
         <div className="grid gap-8 lg:grid-cols-2">
