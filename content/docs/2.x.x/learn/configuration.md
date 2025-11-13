@@ -51,7 +51,7 @@ interface EtaConfig {
     processAST?: Function
     processTemplate?: Function
   }>
-  /** Remove all safe-to-remove whitespace */
+  /** Remove empty lines and whitespace between lines */
   rmWhitespace: boolean
   /** Delimiters: by default `['<%', '%>']` */
   tags: [string, string]
