@@ -11,32 +11,32 @@
     "format": "biome format --write"
   },
   "dependencies": {
-    "@vercel/analytics": "^1.5.0",
-    "ace-builds": "^1.43.3",
+    "@vercel/analytics": "^1.6.1",
+    "ace-builds": "^1.43.6",
     "class-variance-authority": "^0.7.1",
-    "eta": "^4.0.1",
-    "fumadocs-core": "15.7.12",
-    "fumadocs-mdx": "11.10.0",
-    "fumadocs-ui": "15.7.12",
-    "lucide-react": "^0.544.0",
-    "next": "15.5.3",
-    "react": "^19.1.1",
+    "eta": "^4.5.1",
+    "fumadocs-core": "16.6.3",
+    "fumadocs-mdx": "14.2.7",
+    "fumadocs-ui": "16.6.3",
+    "lucide-react": "^0.574.0",
+    "next": "16.1.6",
+    "react": "^19.2.4",
     "react-ace": "^14.0.1",
-    "react-dom": "^19.1.1",
+    "react-dom": "^19.2.4",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.4",
-    "@tailwindcss/postcss": "^4.1.13",
+    "@biomejs/biome": "2.4.2",
+    "@tailwindcss/postcss": "^4.2.0",
     "@types/mdx": "^2.0.13",
-    "@types/node": "24.3.3",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
+    "@types/node": "25.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13",
-    "typescript": "^5.9.2"
+    "tailwindcss": "^4.2.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -13,9 +13,10 @@ const processor = remark()
   .use(remarkGfm);
 
 export async function getLLMText(page: InferPageType<typeof source>) {
+  const filePath = page.absolutePath!;
   const processed = await processor.process({
-    path: page.absolutePath,
-    value: await fs.readFile(page.absolutePath),
+    path: filePath,
+    value: await fs.readFile(filePath),
   });
 
   // note: it doesn't escape frontmatter, it's up to you.
