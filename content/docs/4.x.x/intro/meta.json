@@ -1,3 +1,5 @@
 {
-  "defaultOpen": true
+  "title": "Getting Started",
+  "defaultOpen": true,
+  "pages": ["quickstart", "security"]
 }

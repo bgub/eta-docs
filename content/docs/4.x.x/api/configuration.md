@@ -20,6 +20,9 @@ type config = {
   /** Holds cache of resolved filepaths. Set to `false` to disable. */
   cacheFilepaths: boolean
 
+  /** Custom tag prefixes. Keys are prefixes, values are handler functions. Default {} */
+  customTags: Record<string, (content: string, data: unknown) => string>
+
   /** Whether to pretty-format error messages (introduces runtime penalties) */
   debug: boolean
 

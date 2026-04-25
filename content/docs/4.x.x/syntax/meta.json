@@ -1,0 +1,11 @@
+{
+  "title": "Template Syntax",
+  "defaultOpen": true,
+  "pages": [
+    "template-syntax",
+    "layouts-and-blocks",
+    "helpers",
+    "custom-tags",
+    "cheatsheet"
+  ]
+}

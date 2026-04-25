@@ -4,6 +4,8 @@ title: Quickstart
 slug: /
 ---
 
+Eta is a lightweight and blazing fast embedded JS templating engine by [bgub (Ben Gubler)](https://github.com/bgub). It works inside Node, Deno, and the browser.
+
 Install Eta
 
 ```bash
